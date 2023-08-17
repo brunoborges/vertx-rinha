@@ -1,0 +1,16 @@
+### List all
+GET http://localhost:8080/pessoas HTTP/1.1
+
+### Create one
+POST http://localhost:8080/pessoas HTTP/1.1
+Content-Type: application/json
+
+{
+    "apelido" : "josé",
+    "nome" : "José Roberto",
+    "nascimento" : "2000-10-01",
+    "stack" : ["C#", "Node", "Oracle"]
+}
+
+### Count how many
+GET http://localhost:8080/contagem-pessoas HTTP/1.1

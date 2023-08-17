@@ -122,7 +122,7 @@ public class App extends AbstractVerticle implements Handler<HttpServerRequest> 
   public void start(Promise<Void> startPromise) throws Exception {
     int port = 8080;
     server = vertx.createHttpServer(new HttpServerOptions())
-            .requestHandler(App.this);
+        .requestHandler(App.this);
     dateString = createDateHeader();
     plaintextHeaders = new CharSequence[] {
         HEADER_CONTENT_TYPE, RESPONSE_TYPE_PLAIN,
@@ -140,27 +140,28 @@ public class App extends AbstractVerticle implements Handler<HttpServerRequest> 
     options.setCachePreparedStatements(true);
     options.setPipeliningLimit(100_000); // Large pipelining means less flushing and we use a single connection anyway
     PgConnection.connect(vertx, options)
-            .flatMap(conn -> {
-              client = (SqlClientInternal) conn;
-              Future<PreparedStatement> f1 = conn.prepare(SELECT_WORLD)
-                      .andThen(onSuccess(ps -> SELECT_WORLD_QUERY = ps.query()));
-              Future<PreparedStatement> f2 = conn.prepare(SELECT_FORTUNE)
-                      .andThen(onSuccess(ps -> SELECT_FORTUNE_QUERY = ps.query()));
-              Future<PreparedStatement> f3 = conn.prepare(UPDATE_WORLD)
-                      .andThen(onSuccess(ps -> UPDATE_WORLD_QUERY = ps.query()));
-              Future<WorldCache> f4 = conn.preparedQuery(SELECT_WORLDS)
-                      .collecting(Collectors.mapping(row -> new CachedWorld(row.getInteger(0), row.getInteger(1)), Collectors.toList()))
-                      .execute()
-                      .map(worlds -> new WorldCache(worlds.value()))
-                      .andThen(onSuccess(wc -> WORLD_CACHE = wc));
-              return CompositeFuture.join(f1, f2, f3, f4);
-            })
-            .transform(ar -> {
-              databaseErr = ar.cause();
-              return server.listen(port);
-            })
-            .<Void>mapEmpty()
-            .onComplete(startPromise);
+        .flatMap(conn -> {
+          client = (SqlClientInternal) conn;
+          Future<PreparedStatement> f1 = conn.prepare(SELECT_WORLD)
+              .andThen(onSuccess(ps -> SELECT_WORLD_QUERY = ps.query()));
+          Future<PreparedStatement> f2 = conn.prepare(SELECT_FORTUNE)
+              .andThen(onSuccess(ps -> SELECT_FORTUNE_QUERY = ps.query()));
+          Future<PreparedStatement> f3 = conn.prepare(UPDATE_WORLD)
+              .andThen(onSuccess(ps -> UPDATE_WORLD_QUERY = ps.query()));
+          Future<WorldCache> f4 = conn.preparedQuery(SELECT_WORLDS)
+              .collecting(
+                  Collectors.mapping(row -> new CachedWorld(row.getInteger(0), row.getInteger(1)), Collectors.toList()))
+              .execute()
+              .map(worlds -> new WorldCache(worlds.value()))
+              .andThen(onSuccess(wc -> WORLD_CACHE = wc));
+          return CompositeFuture.join(f1, f2, f3, f4);
+        })
+        .transform(ar -> {
+          databaseErr = ar.cause();
+          return server.listen(port);
+        })
+        .<Void>mapEmpty()
+        .onComplete(startPromise);
   }
 
   private static <T> Handler<AsyncResult<T>> onSuccess(Handler<T> handler) {
@@ -208,7 +209,8 @@ public class App extends AbstractVerticle implements Handler<HttpServerRequest> 
 
   @Override
   public void stop() {
-    if (server != null) server.close();
+    if (server != null)
+      server.close();
   }
 
   private void sendError(HttpServerRequest req, Throwable cause) {
@@ -219,7 +221,7 @@ public class App extends AbstractVerticle implements Handler<HttpServerRequest> 
   private void handlePlainText(HttpServerRequest request) {
     HttpServerResponse response = request.response();
     MultiMap headers = response.headers();
-    for (int i = 0;i < plaintextHeaders.length; i+= 2) {
+    for (int i = 0; i < plaintextHeaders.length; i += 2) {
       headers.add(plaintextHeaders[i], plaintextHeaders[i + 1]);
     }
     response.end(HELLO_WORLD_BUFFER, NULL_HANDLER);
@@ -414,7 +416,7 @@ public class App extends AbstractVerticle implements Handler<HttpServerRequest> 
     count = Math.min(500, count);
     CachedWorld[] worlds = WORLD_CACHE.getCachedWorld(count);
     JsonArray json = new JsonArray(new ArrayList<>(count));
-    for (int i = 0;i < count;i++) {
+    for (int i = 0; i < count; i++) {
       CachedWorld world = worlds[i];
       json.add(JsonObject.of("id", world.getId(), "randomNumber", world.getRandomNumber()));
     }
@@ -439,7 +441,8 @@ public class App extends AbstractVerticle implements Handler<HttpServerRequest> 
       }
     }
     JsonObject config = new JsonObject(new String(Files.readAllBytes(new File(args[0]).toPath())));
-    Vertx vertx = Vertx.vertx(new VertxOptions().setEventLoopPoolSize(eventLoopPoolSize).setPreferNativeTransport(true));
+    Vertx vertx = Vertx
+        .vertx(new VertxOptions().setEventLoopPoolSize(eventLoopPoolSize).setPreferNativeTransport(true));
     vertx.exceptionHandler(err -> {
       err.printStackTrace();
     });
@@ -474,10 +477,11 @@ public class App extends AbstractVerticle implements Handler<HttpServerRequest> 
       }
       version = out.toString();
     } catch (IOException e) {
-      logger.error("Could not read Vertx version", e);;
+      logger.error("Could not read Vertx version", e);
+      ;
     }
     logger.info("Vertx: " + version);
-    logger.info("Event Loop Size: " + ((MultithreadEventExecutorGroup)vertx.nettyEventLoopGroup()).executorCount());
+    logger.info("Event Loop Size: " + ((MultithreadEventExecutorGroup) vertx.nettyEventLoopGroup()).executorCount());
     logger.info("Native transport : " + nativeTransport);
     logger.info("Transport : " + transport);
   }
